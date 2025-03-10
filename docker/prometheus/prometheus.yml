@@ -1,0 +1,19 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'flight-consumer'
+    static_configs:
+      - targets: ['flight-consumer:8001']
+
+  - job_name: 'bag-consumer'
+    static_configs:
+      - targets: ['bag-consumer:8002']
+
+  - job_name: 'arriving-flight-work-producer'
+    static_configs:
+      - targets: ['arriving-flight-work-producer:8003']
+
+  - job_name: 'test-producers'
+    static_configs:
+      - targets: ['test-producers:8004'] 
