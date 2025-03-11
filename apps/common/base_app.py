@@ -1,9 +1,9 @@
 from prometheus_client import start_http_server
-from prometheus_client.core import REGISTRY
 import logging
 import json
 import sys
 from datetime import datetime
+import uuid
 
 class JsonFormatter(logging.Formatter):
     def format(self, record):
@@ -21,9 +21,10 @@ class BaseApp:
     def __init__(self, name: str, prometheus_port: int):
         self.name = name
         self.prometheus_port = prometheus_port
-        self._registry = None
+        self.instance_id = str(uuid.uuid4())[:8]  # Use first 8 chars of UUID
         self._setup_logging()
         self._setup_metrics()
+        self._setup_metrics_server()
 
     def _setup_logging(self):
         logging.basicConfig(
@@ -34,10 +35,15 @@ class BaseApp:
         for handler in logging.getLogger().handlers:
             handler.setFormatter(JsonFormatter())
         self.logger = logging.getLogger(self.name)
+        self.logger.info("Setting up logging (after handlers)")
+
+    def _setup_metrics_server(self):
+        self.logger.info("Setting up metrics")
+        start_http_server(self.prometheus_port)
+        self.logger.info(f"Started Prometheus metrics server on port {self.prometheus_port}")
 
     def _setup_metrics(self):
-        start_http_server(self.prometheus_port, registry=self._registry or REGISTRY)
-        self.logger.info(f"Started Prometheus metrics server on port {self.prometheus_port}")
+        raise NotImplementedError("Subclasses must implement _setup_metrics()")
 
     def run(self):
         raise NotImplementedError("Subclasses must implement run()") 

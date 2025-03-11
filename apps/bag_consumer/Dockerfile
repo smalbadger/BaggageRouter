@@ -2,8 +2,9 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-COPY apps/common /app/common
-COPY apps/bag_consumer /app/bag_consumer
+COPY apps/common common/
+COPY apps/bag_consumer bag_consumer/
+COPY docker/redis/scripts scripts/
 
 RUN pip install kafka-python redis prometheus_client
 

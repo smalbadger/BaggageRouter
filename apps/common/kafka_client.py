@@ -40,7 +40,11 @@ class KafkaClient:
             self.producer = self._connect_with_retry(
                 lambda: KafkaProducer(
                     bootstrap_servers=self.bootstrap_servers,
-                    value_serializer=lambda x: json.dumps(x).encode('utf-8')
+                    value_serializer=lambda x: json.dumps(x).encode('utf-8'),
+                    buffer_memory=67108864 * 4,  # 256MB buffer (4x default)
+                    batch_size=16384 * 4,  # 64KB batches (4x default)
+                    linger_ms=100,  # Wait up to 100ms for batches to fill
+                    compression_type='gzip'  # Enable compression
                 )
             )
         return self.producer
@@ -50,11 +54,15 @@ class KafkaClient:
         topic: str,
         batch_size: int,
         timeout_ms: int,
-        process_message: Callable[[Any], None]
+        process_messages: Callable[[List[Any]], None]
     ):
         consumer = self.get_consumer(topic)
         messages = consumer.poll(timeout_ms=timeout_ms, max_records=batch_size)
         
+        batch = []
         for topic_partition, records in messages.items():
             for record in records:
-                process_message(record.value) 
+                batch.append(record.value)
+        
+        if batch:
+            process_messages(batch) 

@@ -1,7 +1,12 @@
 global:
   scrape_interval: 15s
+  evaluation_interval: 15s
 
 scrape_configs:
+  - job_name: 'test-producers'
+    static_configs:
+      - targets: ['test-producers:8004']
+
   - job_name: 'flight-consumer'
     static_configs:
       - targets: ['flight-consumer:8001']
@@ -14,6 +19,6 @@ scrape_configs:
     static_configs:
       - targets: ['arriving-flight-work-producer:8003']
 
-  - job_name: 'test-producers'
+  - job_name: 'redis'
     static_configs:
-      - targets: ['test-producers:8004'] 
+      - targets: ['redis-exporter:9121'] 

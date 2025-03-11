@@ -3,6 +3,7 @@ from common.kafka_client import KafkaClient
 from common.redis_client import RedisClient
 from common.models import Bag
 from prometheus_client import Counter, Histogram
+from prometheus_client.core import CollectorRegistry
 import time
 
 class BagConsumer(BaseApp):
@@ -10,7 +11,6 @@ class BagConsumer(BaseApp):
         super().__init__("bag_consumer", prometheus_port)
         self.kafka_client = KafkaClient(consumer_group="bag-consumer-group")
         self.redis_client = RedisClient()
-        self._setup_metrics()
 
     def _setup_metrics(self):
         self.processed_messages = Counter(
@@ -22,13 +22,15 @@ class BagConsumer(BaseApp):
             'Time spent processing bag messages'
         )
 
-    def process_message(self, message):
-        bag = Bag(
-            id=message['id'],
-            flights=message['flights']
-        )
-        self.redis_client.upsert_bags([bag])
-        self.processed_messages.inc()
+    def process_messages(self, messages):
+        bags = [
+            Bag(
+                id=msg['id'],
+                flights=msg['flights']
+            ) for msg in messages
+        ]
+        self.redis_client.upsert_bags(bags)
+        self.processed_messages.inc(len(bags))
 
     def run(self):
         self.logger.info("Starting Bag Consumer")
@@ -37,13 +39,14 @@ class BagConsumer(BaseApp):
                 with self.processing_time.time():
                     self.kafka_client.consume_batch(
                         topic="bags",
-                        batch_size=100,
+                        batch_size=1000,
                         timeout_ms=1000,
-                        process_message=self.process_message
+                        process_messages=self.process_messages
                     )
             except Exception as e:
                 self.logger.error(f"Error processing messages: {e}")
-                time.sleep(1)
+            
+            time.sleep(1)
 
 if __name__ == "__main__":
     consumer = BagConsumer()

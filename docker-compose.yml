@@ -47,8 +47,22 @@ services:
     image: redis:latest
     ports:
       - "6379:6379"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./docker/redis/scripts:/scripts
+      - ./docker/redis/entrypoint.sh:/entrypoint.sh
+    command: redis-server --save "" --appendonly no
+    entrypoint: ["sh", "-c", "chmod +x /entrypoint.sh && /entrypoint.sh"]
+
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    ports:
+      - "9121:9121"
+    environment:
+      - REDIS_ADDR=redis://redis:6379
+    depends_on:
+      - redis
 
   prometheus:
     image: prom/prometheus:latest
@@ -56,6 +70,13 @@ services:
       - "9090:9090"
     volumes:
       - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - /tmp/prometheus:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--storage.tsdb.retention.time=1h'
 
   grafana:
     image: grafana/grafana:latest
@@ -63,11 +84,17 @@ services:
       - "3000:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_DASHBOARDS_MIN_REFRESH_INTERVAL=1s
+      - GF_DASHBOARDS_VERSIONS_TO_KEEP=0
+      - GF_PATHS_DATA=/tmp/grafana
     depends_on:
       - prometheus
       - loki
     volumes:
       - ./docker/grafana/provisioning:/etc/grafana/provisioning
+      - ./docker/grafana/dashboards:/etc/grafana/dashboards
+      - type: tmpfs
+        target: /tmp/grafana
 
   flight-consumer:
     build:
@@ -117,8 +144,10 @@ services:
     command: -config.file=/etc/loki/local-config.yaml
     volumes:
       - ./docker/loki:/etc/loki
-      - loki_data:/loki
-      - loki_wal:/wal
+      - type: tmpfs
+        target: /loki
+      - type: tmpfs
+        target: /wal
 
   promtail:
     image: grafana/promtail:2.9.0
@@ -130,6 +159,11 @@ services:
     depends_on:
       - loki
 
-volumes:
-  loki_data:
-  loki_wal:
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
