@@ -2,6 +2,10 @@
 
 A distributed system for tracking baggage across multiple flights, built with Python, Kafka, Redis, and modern observability tools.
 
+# Warning
+
+This project is a work in progress and is not ready for production use. I'm fairly confident there are bugs. This was put together very quickly to prove out my design.
+
 ## System Architecture
 
 ![Baggage Router System Architecture](images/BaggageRouterArchitecture.jpg)
@@ -48,6 +52,12 @@ A distributed system for tracking baggage across multiple flights, built with Py
 ## Local Dashboard
 
 ![Baggage Router Dashboard](images/Dashboard.png)
+
+The above dashboard shows the following:
+
+- The first row shows the flights and bags produced to the data streams. Arrival data is generated for a 24-hour period starting 2 minutes from now. 1000 flights and 300,000 bags are produced for each hour.
+- The second row shows the bags and flights that are consumed from the data streams and inserted into Redis.
+- The third row shows FlightArrivalWork being produced. The image shows us producing
 
 #### Redis Data Structures
 
@@ -177,9 +187,11 @@ A distributed system for tracking baggage across multiple flights, built with Py
 - Prometheus: http://localhost:9090
 - Redis Commander: http://localhost:8081
 
-### Downsides of the current architecture
+### Scaling Improvements
 
-1. Redis may be a bottleneck at much larger scale.
-2. Data should be deleted from Redis after it's no longer needed. We should consider moving data to a more persistent database and use Redis as a sort of cache.
-3. If we have to rewind our progress consuming from Kafka, messages ArrivingFlightWork messages may look different due to bag/flight information not being available.
-
+1. Add a long-term database to store bag/flight information.
+2. Add a job to delete old data from Redis.
+3. Use multiple partitions on the datastreams to facilitate higher throughput.
+4. Use multiple replicas for each application to facilitate higher throughput.
+5. Use a redis cluster with multiple read nodes to facilitate higher throughput.
+    - This would introduce race conditions in our data. We could lock bits of logic to fix these race conditions.
