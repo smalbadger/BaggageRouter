@@ -59,6 +59,8 @@ The above dashboard shows the following:
 - The second row shows the bags and flights that are consumed from the data streams and inserted into Redis.
 - The third row shows FlightArrivalWork being produced. The image shows us producing
 
+This dashboard shows us producing about 240,000 work items per hour (which is 240x the number of flights).
+
 #### Redis Data Structures
 
 ##### Flights
