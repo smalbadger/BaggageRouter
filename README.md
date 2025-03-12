@@ -2,9 +2,23 @@
 
 A distributed system for tracking baggage across multiple flights, built with Python, Kafka, Redis, and modern observability tools.
 
-# Warning
+## Warning
 
 This project is a work in progress and is not ready for production use. I'm fairly confident there are bugs. This was put together very quickly to prove out my design.
+
+## Performance
+
+### Input Parameters
+
+- The expected actual flow rate is about 100 flights/hour and 10,000 bags/hour.
+- For testing, I generated 1000 flights and 300,000 bags for each hour in a 24-hour period that has already passed (so the FlightArrivalWork is ready to be created immediately). Records are generated as quickly as possible (no delay mock actual flow rate).
+- Each bag is linked to 1-3 flights.
+
+### Measured Throughput
+
+- Without additional scaling improvements mentioned at the end of this document, the system is able to produce about 240,000 work items per hour.
+- This is 240x the number of flights expected.
+
 
 ## System Architecture
 
