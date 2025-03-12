@@ -21,7 +21,7 @@ This project is a work in progress and is not ready for production use. I'm fair
 ### Measured Throughput
 
 - Without additional scaling improvements mentioned at the end of this document, the system is able to produce about 240,000 work items per hour.
-- This is 240x the number of flights expected.
+- This is 2,400x the number of flights expected.
 
 
 ## System Architecture
@@ -77,7 +77,7 @@ The above dashboard shows the following:
 - The second row shows the bags and flights that are consumed from the data streams and inserted into Redis.
 - The third row shows FlightArrivalWork being produced. The image shows us producing
 
-This dashboard shows us producing about 240,000 work items per hour (which is 240x the number of flights).
+This dashboard shows us producing about 240,000 work items per hour (which is 2,400x the number of flights).
 
 #### Redis Data Structures
 
