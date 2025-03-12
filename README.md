@@ -1,6 +1,10 @@
-# Flight Baggage Tracking System
+# Flight Baggage Tracking System Prototype
 
 A distributed system for tracking baggage across multiple flights, built with Python, Kafka, Redis, and modern observability tools.
+
+## Video Walkthrough
+
+[Here](https://drive.google.com/file/d/1lgPLwtijUXefPkkO-MejrYSukJn7jB2M/view?usp=sharing) is a link to the video walkthrough of the system.
 
 ## Warning
 
